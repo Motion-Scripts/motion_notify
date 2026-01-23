@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion Notify</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .notification-container {
+            position: fixed;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 440px;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: linear-gradient(135deg, rgba(20, 20, 25, 0.98), rgba(15, 15, 20, 0.98));
+            border-radius: 20px;
+            padding: 20px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 20px 60px -10px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.02),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            animation: slideInBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            min-width: 360px;
+            pointer-events: auto;
+            transform-origin: top right;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, currentColor -50%, transparent 50%);
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .notification::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, currentColor, transparent);
+            border-radius: 0 0 0 20px;
+            animation: progressSweep var(--duration) linear;
+            box-shadow: 
+                0 0 20px currentColor,
+                0 0 40px currentColor;
+        }
+
+        @keyframes slideInBounce {
+            0% {
+                transform: translateX(120%) scale(0.9) rotate(5deg);
+                opacity: 0;
+            }
+            60% {
+                transform: translateX(-5%) scale(1.02) rotate(-1deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutScale {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(120%) scale(0.85);
+                opacity: 0;
+            }
+        }
+
+        @keyframes progressSweep {
+            from { 
+                width: 100%;
+                opacity: 1;
+            }
+            to { 
+                width: 0%;
+                opacity: 0.3;
+            }
+        }
+
+        .notification.removing {
+            animation: slideOutScale 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
+
+        .notification-icon-wrapper {
+            position: relative;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .notification-icon-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 30%, currentColor, transparent 70%);
+            opacity: 0.15;
+            animation: iconGlow 3s ease-in-out infinite;
+        }
+
+        .notification-icon-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: linear-gradient(45deg, transparent, currentColor, transparent);
+            opacity: 0;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes iconGlow {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 0.25; transform: scale(1.05); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+
+        .notification-icon {
+            width: 24px;
+            height: 24px;
+            color: currentColor;
+            filter: drop-shadow(0 2px 8px currentColor);
+            position: relative;
+            z-index: 1;
+        }
+
+        .notification-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .notification-title {
+            font-weight: 700;
+            font-size: 15.5px;
+            margin-bottom: 6px;
+            color: #ffffff;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .notification-message {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.6;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 20px;
+            line-height: 1;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: rotate(90deg) scale(1.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .notification.success {
+            color: #22c55e;
+            border-color: rgba(34, 197, 94, 0.15);
+        }
+
+        .notification.success .notification-icon-wrapper {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.08));
+            border-color: rgba(34, 197, 94, 0.3);
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+        }
+
+        .notification.error {
+            color: #f43f5e;
+            border-color: rgba(244, 63, 94, 0.15);
+        }
+
+        .notification.error .notification-icon-wrapper {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(244, 63, 94, 0.08));
+            border-color: rgba(244, 63, 94, 0.3);
+            box-shadow: 0 0 30px rgba(244, 63, 94, 0.2);
+        }
+
+        .notification.warning, .notification.warn {
+            color: #fb923c;
+            border-color: rgba(251, 146, 60, 0.15);
+        }
+
+        .notification.warning .notification-icon-wrapper,
+        .notification.warn .notification-icon-wrapper {
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(251, 146, 60, 0.08));
+            border-color: rgba(251, 146, 60, 0.3);
+            box-shadow: 0 0 30px rgba(251, 146, 60, 0.2);
+        }
+
+        .notification.info {
+            color: #60a5fa;
+            border-color: rgba(96, 165, 250, 0.15);
+        }
+
+        .notification.info .notification-icon-wrapper {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(96, 165, 250, 0.08));
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 0 30px rgba(96, 165, 250, 0.2);
+        }
+
+        .notification.success::after { box-shadow: 0 0 20px #22c55e, 0 0 40px #22c55e; }
+        .notification.error::after { box-shadow: 0 0 20px #f43f5e, 0 0 40px #f43f5e; }
+        .notification.warning::after, .notification.warn::after { box-shadow: 0 0 20px #fb923c, 0 0 40px #fb923c; }
+        .notification.info::after { box-shadow: 0 0 20px #60a5fa, 0 0 40px #60a5fa; }
+
+        /* Editor Styles */
+        .editor-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .editor-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .editor-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 50px),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 50px);
+            pointer-events: none;
+        }
+
+        .editor-notification {
+            position: absolute;
+            cursor: move;
+            pointer-events: auto;
+            animation: none !important;
+        }
+
+        .editor-notification::after {
+            display: none;
+        }
+
+        .editor-notification.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .editor-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .editor-btn.save {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .editor-btn.save:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+        }
+
+        .editor-btn.cancel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .editor-btn.cancel:hover {
+            transform: translateY(-2px) scale(1.03);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+        }
+
+        .editor-info {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(20, 20, 25, 0.95), rgba(15, 15, 20, 0.95));
+            padding: 20px 32px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            z-index: 10001;
+            max-width: 400px;
+        }
+
+        .editor-info h3 {
+            color: #60a5fa;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .editor-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            text-align: center;
+            margin: 0 0 20px 0;
+        }
+
+        .editor-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        .volume-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(96, 165, 250, 0.4);
+            transition: all 0.2s;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.6);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(96, 165, 250, 0.4);
+            transition: all 0.2s;
+        }
+
+        .volume-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.6);
+        }
+
+        .volume-value {
+            color: #60a5fa;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .editor-info.draggable {
+            cursor: move;
+            user-select: none;
+        }
+        
+        .editor-info.dragging {
+            opacity: 0.9;
+            cursor: grabbing;
+        }
+        
+        .editor-info-header {
+            cursor: move;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification-container" id="notificationContainer"></div>
+    <audio id="sound" src="./alert.ogg" preload="auto"></audio>
+
+    <!-- Editor Overlay -->
+    <div class="editor-overlay" id="editorOverlay">
+        <div class="editor-grid"></div>
+        <div class="editor-info draggable" id="editorInfo">
+            <div class="editor-info-header">
+                <h3>Notification Settings</h3>
+                <p>Drag me or the notification to reposition</p>
+            </div>
+            
+            <div class="editor-settings">
+                <div class="setting-item">
+                    <div class="setting-header">
+                        <span class="setting-label">Sound Enabled</span>
+                        <div class="toggle-switch active" id="soundToggle"></div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-header">
+                        <span class="setting-label">Volume</span>
+                        <span class="volume-value" id="volumeValue">50%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="50" class="volume-slider" id="volumeSlider">
+                </div>
+            </div>
+            
+            <div class="editor-controls">
+                <button class="editor-btn cancel" id="cancelBtn">Cancel</button>
+                <button class="editor-btn save" id="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        let editorActive = false;
+        let dragElement = null;
+        let dragMenuElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let soundEnabled = true;
+        let soundVolume = 0.5;
+
+        function showNotification(type, title, message, duration, position) {
+            const container = document.getElementById('notificationContainer');
+            
+            //console.log('showNotification called with position:', position);
+            
+            // Position container based on x,y coordinates
+            if (position && position.x !== undefined && position.y !== undefined) {
+                //console.log('Setting container position to:', position.x, position.y);
+                container.style.left = position.x + 'px';
+                container.style.top = position.y + 'px';
+                container.style.right = 'auto';
+                container.style.bottom = 'auto';
+                container.style.transform = 'none';
+            } else {
+                console.warn('Position is missing or invalid:', position);
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.setProperty('--duration', `${duration}ms`);
+
+            // Play sound if enabled
+            if (soundEnabled) {
+                const sound = document.getElementById('sound');
+                sound.volume = soundVolume;
+                sound.play().then(() => {
+                    //console.log("Audio played successfully at volume:", soundVolume);
+                }).catch(err => {
+                    //console.error("Audio play failed:", err);
+                });
+            }
+
+            const icons = {
+                success: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>',
+                error: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>',
+                warning: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
+                warn: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
+                info: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>'
+            };
+
+            notification.innerHTML = `
+                <div class="notification-icon-wrapper">
+                    <div class="notification-icon">
+                        ${icons[type] || icons.info}
+                    </div>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+                <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('removing');
+                setTimeout(() => notification.remove(), 400);
+            }, duration);
+        }
+
+        // Editor Functions
+        function openEditor(x, y, sound, volume, menuX, menuY) {
+            //console.log('Opening editor at:', x, y, 'Sound:', sound, 'Volume:', volume);
+            editorActive = true;
+            
+            // Set settings from loaded values
+            soundEnabled = sound !== undefined ? sound : true;
+            // Volume is already 0-100, don't multiply
+            soundVolume = volume !== undefined ? (volume / 100) : 0.5;
+            
+            const overlay = document.getElementById('editorOverlay');
+            overlay.classList.add('active');
+            
+            // Position the settings menu
+            const editorInfo = document.getElementById('editorInfo');
+            if (menuX !== undefined && menuY !== undefined) {
+                editorInfo.style.position = 'fixed';
+                editorInfo.style.left = menuX + 'px';
+                editorInfo.style.top = menuY + 'px';
+                editorInfo.style.transform = 'none';
+            }
+            
+            // Update UI controls
+            const soundToggle = document.getElementById('soundToggle');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            
+            if (soundEnabled) {
+                soundToggle.classList.add('active');
+            } else {
+                soundToggle.classList.remove('active');
+            }
+            
+            // Volume is already 0-100 from Lua
+            volumeSlider.value = volume !== undefined ? volume : 50;
+            volumeValue.textContent = (volume !== undefined ? volume : 50) + '%';
+
+            const previewNotification = document.createElement('div');
+            previewNotification.className = 'notification info editor-notification';
+            previewNotification.id = 'editorPreview';
+            previewNotification.style.left = x + 'px';
+            previewNotification.style.top = y + 'px';
+
+            previewNotification.innerHTML = `
+                <div class="notification-icon-wrapper">
+                    <div class="notification-icon">
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    </div>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Preview Notification</div>
+                    <div class="notification-message">Drag me to position</div>
+                </div>
+            `;
+
+            overlay.appendChild(previewNotification);
+            setupDrag(previewNotification);
+            setupMenuDrag(editorInfo);
+            
+            soundToggle.onclick = function() {
+                soundEnabled = !soundEnabled;
+                if (soundEnabled) {
+                    this.classList.add('active');
+                } else {
+                    this.classList.remove('active');
+                }
+            };
+            
+            volumeSlider.oninput = function() {
+                soundVolume = parseFloat(this.value) / 100;
+                volumeValue.textContent = this.value + '%';
+            };
+        }
+
+        function setupDrag(element) {
+            element.addEventListener('mousedown', (e) => {
+                dragElement = element;
+                const rect = element.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                element.classList.add('dragging');
+            });
+        }
+
+        function setupMenuDrag(element) {
+            const header = element.querySelector('.editor-info-header');
+            header.addEventListener('mousedown', (e) => {
+                dragMenuElement = element;
+                const rect = element.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                element.classList.add('dragging');
+            });
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (dragElement && editorActive) {
+                const x = e.clientX - offsetX;
+                const y = e.clientY - offsetY;
+                
+                dragElement.style.left = x + 'px';
+                dragElement.style.top = y + 'px';
+            }
+            
+            if (dragMenuElement && editorActive) {
+                const x = e.clientX - offsetX;
+                const y = e.clientY - offsetY;
+                
+                dragMenuElement.style.left = x + 'px';
+                dragMenuElement.style.top = y + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (dragElement) {
+                dragElement.classList.remove('dragging');
+                dragElement = null;
+            }
+            if (dragMenuElement) {
+                dragMenuElement.classList.remove('dragging');
+                dragMenuElement = null;
+            }
+        });
+
+        function closeEditor() {
+            //console.log('Closing editor');
+            editorActive = false;
+            const overlay = document.getElementById('editorOverlay');
+            overlay.classList.remove('active');
+            
+            const preview = document.getElementById('editorPreview');
+            if (preview) {
+                preview.remove();
+            }
+
+            $.post('https://motion_notify/closeEditor', JSON.stringify({}));
+        }
+
+        function savePosition() {
+            const preview = document.getElementById('editorPreview');
+            const menu = document.getElementById('editorInfo');
+            
+            if (preview && menu) {
+                const x = Math.round(parseFloat(preview.style.left));
+                const y = Math.round(parseFloat(preview.style.top));
+                
+                const menuRect = menu.getBoundingClientRect();
+                const menuX = Math.round(menuRect.left);
+                const menuY = Math.round(menuRect.top);
+                
+                //console.log('Saving - Position:', x, y, 'Menu:', menuX, menuY, 'Sound:', soundEnabled, 'Volume:', Math.round(soundVolume * 100));
+                
+                $.post('https://motion_notify/saveSettings', JSON.stringify({ 
+                    x: x, 
+                    y: y,
+                    menuX: menuX,
+                    menuY: menuY,
+                    sound: soundEnabled,
+                    volume: Math.round(soundVolume * 100) // Send as 0-100 integer
+                }));
+                
+                editorActive = false;
+                const overlay = document.getElementById('editorOverlay');
+                overlay.classList.remove('active');
+                preview.remove();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && editorActive) {
+                closeEditor();
+            }
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', savePosition);
+        document.getElementById('cancelBtn').addEventListener('click', closeEditor);
+
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            //console.log('Received NUI message:', data);
+            
+            if (data.action === 'notify') {
+                showNotification(
+                    data.type || 'info',
+                    data.title || 'Notification',
+                    data.message || '',
+                    data.duration || 5000,
+                    data.position
+                );
+            } else if (data.action === 'openEditor') {
+                openEditor(
+                    data.x || window.innerWidth / 2 - 180,
+                    data.y || 20,
+                    data.sound,
+                    data.volume,
+                    data.menuX,
+                    data.menuY
+                );
+            } else if (data.action === 'updateSettings') {
+                soundEnabled = data.sound !== undefined ? data.sound : true;
+                soundVolume = data.volume !== undefined ? (data.volume / 100) : 0.5;
+                //console.log('Settings updated - Sound:', soundEnabled, 'Volume:', data.volume);
+            }
+        });
+    </script>
+</body>
+</html>
