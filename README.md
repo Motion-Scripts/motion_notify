@@ -1,12 +1,13 @@
 # Motion Notify - Modern FiveM Notification System
 
 A sleek, modern notification system for FiveM with sound support and multiple positioning options.
+https://discord.gg/fqUsy3FuYn
 
 ## Installation
 
 1. Download and extract to your FiveM resources folder
 2. Rename the folder to `motion_notify`
-3. Add your `alert.ogg` sound file to the `html/` folder
+3. Add your `alert.ogg` sound file to the `html/` folder (or use the default one)
 4. Add `ensure motion_notify` to your `server.cfg`
 5. Restart your server
 
@@ -34,6 +35,13 @@ end
 ```
 
 ## Framework Integration
+If any of the integrations do not work, please open a ticket in our discord or submit a pull request 
+https://discord.gg/fqUsy3FuYn
+
+We recommend to integrate with ox_lib:
+
+### ox_lib
+1. Replace `lib.notify` function with code from `integrations/ox_lib/notify.lua`
 
 ### QBCore
 1. Copy `integrations/qbcore/motion_notify.lua` to `qb-core/motion_notify.lua`
@@ -46,9 +54,6 @@ end
 ### ESX
 1. Copy `integrations/esx/motion_notify.lua` to `es_extended/motion_notify.lua`
 2. Add `client_script 'motion_notify.lua'` to `es_extended/fxmanifest.lua`
-
-### ox_lib
-1. Replace `lib.notify` function with code from `integrations/ox_lib/notify.lua`
 
 ## Exports List
 
@@ -75,7 +80,8 @@ end
 ## Commands
 
 `/editnotify` - Change default notification position and sound
-
+`/resetnotify` - Reset the to the default notification position and sound
+`/testnotify` - To test the default notifications
 ## Support
 
 For issues or questions, please open an issue on GitHub or open a ticket in our discord: https://discord.gg/fqUsy3FuYn

@@ -72,6 +72,5 @@ if not SUPPRESS_UPDATES then
         end
     end
 
-
     CheckBridgeVersion()
 end

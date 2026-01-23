@@ -29,7 +29,3 @@ files {
 exports {
     'Notify',
 }
-
-dependencies {
-    'motion_bridge'
-}
