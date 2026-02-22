@@ -453,7 +453,8 @@
     </style>
 </head>
 <body>
-    <div class="notification-container" id="notificationContainer"></div></audio>
+    <div class="notification-container" id="notificationContainer"></div>
+    <audio id="sound" src="./alert.ogg" preload="auto"></audio>
 
     <!-- Editor Overlay -->
     <div class="editor-overlay" id="editorOverlay">
@@ -520,11 +521,10 @@
 
             // Play sound if enabled
             if (soundEnabled) {
-                try {
-                    const audio = new Audio('./alert.ogg');
-                    audio.volume = soundVolume;
-                    audio.play();
-                } catch (e) {}
+                var sound = document.getElementById('sound');
+                sound.currentTime = 0;
+                sound.volume = soundVolume;
+                sound.play();
             }
 
             const icons = {
