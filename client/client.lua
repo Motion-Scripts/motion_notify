@@ -7,12 +7,23 @@ local function getPosition()
     local x = GetResourceKvpInt("motion_notify_x")
     local y = GetResourceKvpInt("motion_notify_y")
     
-    if x == 0 and y == 0 then
-        x = 960 - 180
-        y = 20
+if x == 0 and y == 0 then
+        local presets = {
+            ["top-left"]      = {x = 20,   y = 20},
+            ["top-center"]    = {x = 780,  y = 20},
+            ["top-right"]     = {x = 1640, y = 20},
+            ["middle-left"]   = {x = 20,   y = 500},
+            ["middle-center"] = {x = 780,  y = 500},
+            ["middle-right"]  = {x = 1640, y = 500},
+            ["bottom-left"]   = {x = 20,   y = 1020},
+            ["bottom-center"] = {x = 780,  y = 1020},
+            ["bottom-right"]  = {x = 1640, y = 1020},
+        }
+        local preset = presets[Config.Position] or presets["top-right"]
+        x = preset.x
+        y = preset.y
         SetResourceKvpInt("motion_notify_x", x)
         SetResourceKvpInt("motion_notify_y", y)
-        --print('[Motion Notify] Initialized default position: Top Center')
     end
     
     currentPosition = {x = x, y = y}
