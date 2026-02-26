@@ -7,8 +7,6 @@ local function getPosition()
     local x = GetResourceKvpInt("motion_notify_x")
     local y = GetResourceKvpInt("motion_notify_y")
     if x == 0 and y == 0 then
-        -- Values are 0-100 percentages, not pixels.
-        -- The NUI converts them to vw/vh so they work on any resolution.
         local presets = {
             ["top-left"]      = {x = 1,  y = 1},
             ["top-center"]    = {x = 50, y = 1},

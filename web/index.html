@@ -499,14 +499,6 @@
         let soundEnabled = true;
         let soundVolume = 0.5;
 
-        // ── POSITION FIX ──────────────────────────────────────────────────────
-        // x/y are 0-100 percentages from Lua (not hardcoded pixels).
-        // We place the container using vw/vh so it scales to any resolution,
-        // then apply a translate() to anchor correctly from each edge/centre.
-        //   x < 15  → near left  → anchor from left  edge (translateX  0%)
-        //   x > 85  → near right → anchor from right edge (translateX -100%)
-        //   else    → centre     → truly centred          (translateX -50%)
-        //   same logic on Y axis
         function applyContainerPosition(container, x, y) {
             var xAnchor = x < 15 ? '0%' : x > 85 ? '-100%' : '-50%';
             var yAnchor = y < 15 ? '0%' : y > 85 ? '-100%' : '-50%';
@@ -516,7 +508,6 @@
             container.style.bottom    = 'auto';
             container.style.transform = 'translate(' + xAnchor + ', ' + yAnchor + ')';
         }
-        // ─────────────────────────────────────────────────────────────────────
 
         function showNotification(type, title, message, duration, position, soundSetting, volumeSetting) {
             const container = document.getElementById('notificationContainer');
