@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Motion Scripts'
 description 'Motion Notify - Modern Notification System with Sound Support'
-version '1.1.1'
+version '1.1.2'
 
 shared_scripts {
     'config.lua'
@@ -19,11 +19,11 @@ server_scripts {
     '_versioncheck.lua'
 }
 
-ui_page 'html/index.html'
+ui_page 'web/index.html'
 
 files {
-    'html/index.html',
-    'html/alert.ogg',
+    'web/index.html',
+    'web/alert.ogg',
 }
 
 exports {

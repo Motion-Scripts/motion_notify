@@ -6,18 +6,19 @@ local menuPosition = nil
 local function getPosition()
     local x = GetResourceKvpInt("motion_notify_x")
     local y = GetResourceKvpInt("motion_notify_y")
-    
-if x == 0 and y == 0 then
+    if x == 0 and y == 0 then
+        -- Values are 0-100 percentages, not pixels.
+        -- The NUI converts them to vw/vh so they work on any resolution.
         local presets = {
-            ["top-left"]      = {x = 20,   y = 20},
-            ["top-center"]    = {x = 780,  y = 20},
-            ["top-right"]     = {x = 1640, y = 20},
-            ["middle-left"]   = {x = 20,   y = 500},
-            ["middle-center"] = {x = 780,  y = 500},
-            ["middle-right"]  = {x = 1640, y = 500},
-            ["bottom-left"]   = {x = 20,   y = 1020},
-            ["bottom-center"] = {x = 780,  y = 1020},
-            ["bottom-right"]  = {x = 1640, y = 1020},
+            ["top-left"]      = {x = 1,  y = 1},
+            ["top-center"]    = {x = 50, y = 1},
+            ["top-right"]     = {x = 99, y = 1},
+            ["middle-left"]   = {x = 1,  y = 50},
+            ["middle-center"] = {x = 50, y = 50},
+            ["middle-right"]  = {x = 99, y = 50},
+            ["bottom-left"]   = {x = 1,  y = 99},
+            ["bottom-center"] = {x = 50, y = 99},
+            ["bottom-right"]  = {x = 99, y = 99},
         }
         local preset = presets[Config.Position] or presets["top-right"]
         x = preset.x
@@ -25,7 +26,6 @@ if x == 0 and y == 0 then
         SetResourceKvpInt("motion_notify_x", x)
         SetResourceKvpInt("motion_notify_y", y)
     end
-    
     currentPosition = {x = x, y = y}
     return currentPosition
 end
@@ -33,14 +33,12 @@ end
 local function getMenuPosition()
     local x = GetResourceKvpInt("motion_notify_menu_x")
     local y = GetResourceKvpInt("motion_notify_menu_y")
-    
     if x == 0 and y == 0 then
         x = 20
         y = 20
         SetResourceKvpInt("motion_notify_menu_x", x)
         SetResourceKvpInt("motion_notify_menu_y", y)
     end
-    
     menuPosition = {x = x, y = y}
     return menuPosition
 end
@@ -48,7 +46,6 @@ end
 local function getSoundSettings()
     if soundEnabled == nil then
         local storedSound = GetResourceKvpInt("motion_notify_sound")
-        
         if storedSound == 2 or storedSound == 0 then
             local vol = GetResourceKvpInt("motion_notify_volume")
             if storedSound == 0 and vol == 0 then
@@ -64,7 +61,7 @@ local function getSoundSettings()
             soundEnabled = storedSound == 1
         end
     end
-    
+
     if soundVolume == nil then
         soundVolume = GetResourceKvpInt("motion_notify_volume")
         if soundVolume == 0 or soundVolume > 100 then
@@ -72,7 +69,7 @@ local function getSoundSettings()
             SetResourceKvpInt("motion_notify_volume", soundVolume)
         end
     end
-    
+
     return soundEnabled, soundVolume
 end
 
@@ -83,43 +80,38 @@ RegisterNUICallback('saveSettings', function(data, cb)
     local menuY = math.floor(tonumber(data.menuY))
     local sound = data.sound and 1 or 2
     local volume = math.floor(tonumber(data.volume))
-    
     if volume > 100 then volume = 100 end
     if volume < 0 then volume = 0 end
-    
-    --print('[Motion Notify] Saving - Notify: X=' .. x .. ' Y=' .. y .. ' Menu: X=' .. menuX .. ' Y=' .. menuY .. ' Sound=' .. (data.sound and 'ON' or 'OFF') .. ' Volume=' .. volume .. '%')
-    
+
     SetResourceKvpInt("motion_notify_x", x)
     SetResourceKvpInt("motion_notify_y", y)
     SetResourceKvpInt("motion_notify_menu_x", menuX)
     SetResourceKvpInt("motion_notify_menu_y", menuY)
     SetResourceKvpInt("motion_notify_sound", sound)
     SetResourceKvpInt("motion_notify_volume", volume)
-    
+
     currentPosition = {x = x, y = y}
     menuPosition = {x = menuX, y = menuY}
     soundEnabled = data.sound
     soundVolume = volume
-    
+
     SendNUIMessage({
         action = 'updateSettings',
         sound = soundEnabled,
         volume = soundVolume
     })
-    
+
     SetNuiFocus(false, false)
     cb('ok')
 end)
 
 RegisterNUICallback('closeEditor', function(data, cb)
-    --print('[Motion Notify] Closing editor')
     SetNuiFocus(false, false)
     cb('ok')
 end)
 
 local function Notify(title, message, notifyType, duration)
     local pos = getPosition()
-    
     SendNUIMessage({
         action = 'notify',
         type = notifyType or 'info',
@@ -150,7 +142,6 @@ RegisterCommand("editnotify", function()
     local pos = getPosition()
     local menuPos = getMenuPosition()
     local sound, volume = getSoundSettings()
-    
     SetNuiFocus(true, true)
     Wait(50)
     SendNUIMessage({
@@ -171,11 +162,9 @@ RegisterCommand("resetnotify", function()
     SetResourceKvpInt("motion_notify_menu_y", 0)
     SetResourceKvpInt("motion_notify_sound", 0)
     SetResourceKvpInt("motion_notify_volume", 0)
-    
     currentPosition = nil
     menuPosition = nil
     soundEnabled = nil
     soundVolume = nil
-    
     Notify("Reset Settings", "Settings have been successfully set to default.", "success", 5000)
 end)
