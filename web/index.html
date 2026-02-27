@@ -15,7 +15,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            overflow: hidden;
+            /* FIX 1: removed overflow:hidden — it was clipping notifications */
             background: transparent;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -499,13 +499,15 @@
         let soundEnabled = true;
         let soundVolume = 0.5;
 
+        // FIX 3: When a saved position comes in, clear the CSS default (right/top)
+        // and switch to the vw/vh-based placement used by applyContainerPosition.
         function applyContainerPosition(container, x, y) {
+            container.style.right  = 'auto';
+            container.style.bottom = 'auto';
             var xAnchor = x < 15 ? '0%' : x > 85 ? '-100%' : '-50%';
             var yAnchor = y < 15 ? '0%' : y > 85 ? '-100%' : '-50%';
             container.style.left      = x + 'vw';
             container.style.top       = y + 'vh';
-            container.style.right     = 'auto';
-            container.style.bottom    = 'auto';
             container.style.transform = 'translate(' + xAnchor + ', ' + yAnchor + ')';
         }
 
@@ -527,15 +529,15 @@
                 var sound = document.getElementById('sound');
                 sound.currentTime = 0;
                 sound.volume = soundVolume;
-                sound.play();
+                sound.play().catch(function(){});   // FIX 4: catch autoplay policy errors silently
             }
 
             const icons = {
                 success: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
-                error: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+                error:   '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
                 warning: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-                warn: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-                info: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+                warn:    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                info:    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
             };
 
             notification.innerHTML = `
@@ -548,7 +550,9 @@
                     <div class="notification-title">${title}</div>
                     <div class="notification-message">${message}</div>
                 </div>
-                <button class="notification-close" onclick="this.parentElement.remove()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             `;
 
             container.appendChild(notification);
@@ -563,33 +567,27 @@
             editorActive = true;
             
             soundEnabled = sound !== undefined ? sound : true;
-            soundVolume = volume !== undefined ? (volume / 100) : 0.5;
+            soundVolume  = volume !== undefined ? (volume / 100) : 0.5;
             
-            const overlay = document.getElementById('editorOverlay');
+            const overlay   = document.getElementById('editorOverlay');
             overlay.classList.add('active');
             
             const editorInfo = document.getElementById('editorInfo');
             if (menuX !== undefined && menuY !== undefined) {
-                editorInfo.style.position = 'fixed';
-                editorInfo.style.left = menuX + 'px';
-                editorInfo.style.top = menuY + 'px';
+                editorInfo.style.position  = 'fixed';
+                editorInfo.style.left      = menuX + 'px';
+                editorInfo.style.top       = menuY + 'px';
                 editorInfo.style.transform = 'none';
             }
             
-            const soundToggle = document.getElementById('soundToggle');
+            const soundToggle  = document.getElementById('soundToggle');
             const volumeSlider = document.getElementById('volumeSlider');
-            const volumeValue = document.getElementById('volumeValue');
+            const volumeValue  = document.getElementById('volumeValue');
             
-            if (soundEnabled) {
-                soundToggle.classList.add('active');
-            } else {
-                soundToggle.classList.remove('active');
-            }
-            
-            volumeSlider.value = volume !== undefined ? volume : 50;
+            soundEnabled ? soundToggle.classList.add('active') : soundToggle.classList.remove('active');
+            volumeSlider.value    = volume !== undefined ? volume : 50;
             volumeValue.textContent = (volume !== undefined ? volume : 50) + '%';
 
-            // Convert stored % back to pixels for the draggable preview
             var previewLeft = (x / 100) * window.innerWidth;
             var previewTop  = (y / 100) * window.innerHeight;
             var xOff = x < 15 ? 0 : x > 85 ? -320 : -160;
@@ -599,7 +597,7 @@
 
             const previewNotification = document.createElement('div');
             previewNotification.className = 'notification info editor-notification';
-            previewNotification.id = 'editorPreview';
+            previewNotification.id        = 'editorPreview';
             previewNotification.style.left = previewLeft + 'px';
             previewNotification.style.top  = previewTop  + 'px';
 
@@ -621,11 +619,7 @@
             
             soundToggle.onclick = function() {
                 soundEnabled = !soundEnabled;
-                if (soundEnabled) {
-                    this.classList.add('active');
-                } else {
-                    this.classList.remove('active');
-                }
+                soundEnabled ? this.classList.add('active') : this.classList.remove('active');
             };
             
             volumeSlider.oninput = function() {
@@ -657,50 +651,33 @@
 
         document.addEventListener('mousemove', (e) => {
             if (dragElement && editorActive) {
-                const x = e.clientX - offsetX;
-                const y = e.clientY - offsetY;
-                dragElement.style.left = x + 'px';
-                dragElement.style.top = y + 'px';
+                dragElement.style.left = (e.clientX - offsetX) + 'px';
+                dragElement.style.top  = (e.clientY - offsetY) + 'px';
             }
-            
             if (dragMenuElement && editorActive) {
-                const x = e.clientX - offsetX;
-                const y = e.clientY - offsetY;
-                dragMenuElement.style.left = x + 'px';
-                dragMenuElement.style.top = y + 'px';
+                dragMenuElement.style.left = (e.clientX - offsetX) + 'px';
+                dragMenuElement.style.top  = (e.clientY - offsetY) + 'px';
             }
         });
 
         document.addEventListener('mouseup', () => {
-            if (dragElement) {
-                dragElement.classList.remove('dragging');
-                dragElement = null;
-            }
-            if (dragMenuElement) {
-                dragMenuElement.classList.remove('dragging');
-                dragMenuElement = null;
-            }
+            if (dragElement)     { dragElement.classList.remove('dragging');     dragElement     = null; }
+            if (dragMenuElement) { dragMenuElement.classList.remove('dragging'); dragMenuElement = null; }
         });
 
         function closeEditor() {
             editorActive = false;
-            const overlay = document.getElementById('editorOverlay');
-            overlay.classList.remove('active');
-            
+            document.getElementById('editorOverlay').classList.remove('active');
             const preview = document.getElementById('editorPreview');
-            if (preview) {
-                preview.remove();
-            }
-
+            if (preview) preview.remove();
             $.post('https://motion_notify/closeEditor', JSON.stringify({}));
         }
 
         function savePosition() {
             const preview = document.getElementById('editorPreview');
-            const menu = document.getElementById('editorInfo');
+            const menu    = document.getElementById('editorInfo');
             
             if (preview && menu) {
-                // Convert drag px position back to 0-100 % using card centre
                 var rawLeft = parseFloat(preview.style.left);
                 var rawTop  = parseFloat(preview.style.top);
                 var cardW   = preview.offsetWidth  || 320;
@@ -709,29 +686,24 @@
                 var y = Math.round(Math.min(100, Math.max(0, ((rawTop  + cardH / 2) / window.innerHeight) * 100)));
 
                 const menuRect = menu.getBoundingClientRect();
-                const menuX = Math.round(menuRect.left);
-                const menuY = Math.round(menuRect.top);
                 
                 $.post('https://motion_notify/saveSettings', JSON.stringify({ 
-                    x: x, 
-                    y: y,
-                    menuX: menuX,
-                    menuY: menuY,
-                    sound: soundEnabled,
+                    x:      x, 
+                    y:      y,
+                    menuX:  Math.round(menuRect.left),
+                    menuY:  Math.round(menuRect.top),
+                    sound:  soundEnabled,
                     volume: Math.round(soundVolume * 100)
                 }));
                 
                 editorActive = false;
-                const overlay = document.getElementById('editorOverlay');
-                overlay.classList.remove('active');
+                document.getElementById('editorOverlay').classList.remove('active');
                 preview.remove();
             }
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && editorActive) {
-                closeEditor();
-            }
+            if (e.key === 'Escape' && editorActive) closeEditor();
         });
 
         document.getElementById('saveBtn').addEventListener('click', savePosition);
@@ -739,12 +711,11 @@
 
         window.addEventListener('message', function(event) {
             const data = event.data;
-            
             if (data.action === 'notify') {
                 showNotification(
-                    data.type || 'info',
-                    data.title || 'Notification',
-                    data.message || '',
+                    data.type     || 'info',
+                    data.title    || 'Notification',
+                    data.message  || '',
                     data.duration || 5000,
                     data.position,
                     data.sound,
@@ -752,16 +723,16 @@
                 );
             } else if (data.action === 'openEditor') {
                 openEditor(
-                    data.x !== undefined ? data.x : 99,
-                    data.y !== undefined ? data.y : 1,
+                    data.x      !== undefined ? data.x      : 99,
+                    data.y      !== undefined ? data.y      : 1,
                     data.sound,
                     data.volume,
                     data.menuX,
                     data.menuY
                 );
             } else if (data.action === 'updateSettings') {
-                soundEnabled = data.sound !== undefined ? data.sound : true;
-                soundVolume = data.volume !== undefined ? (data.volume / 100) : 0.5;
+                soundEnabled = data.sound  !== undefined ? data.sound            : true;
+                soundVolume  = data.volume !== undefined ? (data.volume / 100)   : 0.5;
             }
         });
     </script>
