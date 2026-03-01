@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Motion Scripts'
 description 'Motion Notify - Modern Notification System with Sound Support'
-version '1.1.3'
+version '1.1.4'
 
 shared_scripts {
     'config.lua'

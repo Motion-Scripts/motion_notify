@@ -709,9 +709,30 @@
         document.getElementById('saveBtn').addEventListener('click', savePosition);
         document.getElementById('cancelBtn').addEventListener('click', closeEditor);
 
+        // Signal Lua that the NUI is ready. Retries every 500ms until acknowledged.
+        function signalReady() {
+            fetch('https://motion_notify/nuiReady', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            }).catch(function() {});
+        }
+
+        var readyInterval = setInterval(signalReady, 500);
+        signalReady();
+
         window.addEventListener('message', function(event) {
             const data = event.data;
+
+            // Lua confirmed it received nuiReady, stop retrying
+            if (data.action === 'ping') {
+                // Lua re-triggered us, fire back nuiReady
+                signalReady();
+                return;
+            }
+
             if (data.action === 'notify') {
+                clearInterval(readyInterval); // NUI confirmed working, stop retries
                 showNotification(
                     data.type     || 'info',
                     data.title    || 'Notification',
