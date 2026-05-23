@@ -1,17 +1,17 @@
 -- ============================================
--- QBCore Integration for Motion Notify
+-- QBCore Integration for lime Notify
 -- ============================================
 -- INSTALLATION:
--- 1. Copy this file to: qb-core/motion_notify.lua
+-- 1. Copy this file to: qb-core/lime_notify.lua
 -- 2. Add to qb-core/fxmanifest.lua at the BOTTOM:
---    client_script 'motion_notify.lua'
+--    client_script 'lime_notify.lua'
 -- 3. Restart server
 -- ============================================
 
 local originalNotify = QBCore.Functions.Notify
 
 QBCore.Functions.Notify = function(text, texttype, length)
-    if GetResourceState("motion_notify") == "started" then
+    if GetResourceState("lime_notify") == "started" then
         local msg = text
         local title = nil
 
@@ -23,7 +23,7 @@ QBCore.Functions.Notify = function(text, texttype, length)
         local notifyType = texttype or 'info'
         if notifyType == 'primary' then notifyType = 'info' end
 
-        exports["motion_notify"]:Notify(title, msg, notifyType, length)
+        exports["lime_notify"]:Notify(title, msg, notifyType, length)
     else
         originalNotify(text, texttype, length)
     end

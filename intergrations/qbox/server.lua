@@ -1,5 +1,5 @@
 -- ============================================
--- QBox Server Integration for Motion Notify
+-- QBox Server Integration for lime Notify
 -- ============================================
 -- INSTALLATION:
 -- 1. Open qbx_core/server/functions.lua
@@ -8,7 +8,7 @@
 -- ============================================
 
 function Notify(source, text, notifyType, duration, subTitle, notifyPosition, notifyStyle, notifyIcon, notifyIconColor)
-    if GetResourceState("motion_notify") ~= "started" then
+    if GetResourceState("lime_notify") ~= "started" then
         return
     end
 
@@ -25,5 +25,5 @@ function Notify(source, text, notifyType, duration, subTitle, notifyPosition, no
 
     local nType = notifyType or 'info'
 
-    TriggerClientEvent('motion_notify:Notify', source, title, description, nType, duration)
+    TriggerClientEvent('lime_notify:Notify', source, title, description, nType, duration)
 end

@@ -1,5 +1,5 @@
 -- ============================================
--- ox_lib Integration for Motion Notify
+-- ox_lib Integration for lime Notify
 -- ============================================
 -- INSTALLATION:
 -- 1. Open ox_lib/resource/interface/client and find the lib.notify function
@@ -8,14 +8,14 @@
 -- ============================================
 
 function lib.notify(data)
-    if GetResourceState("motion_notify") ~= "started" then
+    if GetResourceState("lime_notify") ~= "started" then
         return
     end
 
     local notifyType = data.type or 'info'
     if notifyType == 'inform' then notifyType = 'info' end
     
-    exports['motion_notify']:Notify(
+    exports['lime_notify']:Notify(
         data.title or 'Notification',
         data.description or '',
         notifyType,
